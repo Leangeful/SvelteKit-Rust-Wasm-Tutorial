@@ -1,5 +1,4 @@
-# SvelteKit + Rust/Wasm Tutorial
-
+# SvelteKit + Rust/Wasm Project Setup Tutorial
 For this tutorial, we will create a rust/wasm project called "wasm-lib" and a SvelteKit web application called "svelte-app" that uses "wasm-lib".
 
 The "wasm-lib" project will be added to "svelte-app" as a [git submodule](https://git-scm.com/book/en/v2/Git-Tools-Submodules), allowing us to keep it as a separate git repository that can be used in multiple projects, without publishing the package.
@@ -25,9 +24,9 @@ Optional step (repo can be kept local)
 
 [Adding locally hosted code to GitHub](https://docs.github.com/en/migrations/importing-source-code/using-the-command-line-to-import-source-code/adding-locally-hosted-code-to-github)
 
-The template comes with git initialized, make a commit, and push the changes to the remote.
+The template comes with an initialized git repo. Make a commit, and push the changes to the remote.
 
-We will add this repository as a Git Submodule to the SvelteKit project later. 
+We will add this repository as a Git Submodule to the SvelteKit application later. 
 
 
 
@@ -35,7 +34,7 @@ We will add this repository as a Git Submodule to the SvelteKit project later.
 
 The template comes with bindings for alert() and greet().
 
-Let's add binding and macro for console.log() because why not? Check [this](https://rustwasm.github.io/wasm-bindgen/examples/console-log.html) for more.
+Let's add a binding and a macro for console.log() because why not? Check [this](https://rustwasm.github.io/wasm-bindgen/examples/console-log.html) for more.
 
 lib.rs
 ```rust
@@ -123,7 +122,7 @@ plugins: [sveltekit(), wasmPack('./wasm-lib')]
 // ...
 ```
 
-## 4.3. Build wasm-lib
+## 4.3. Build "wasm-lib"
 Like we did in [step 3.3](#33-build), however this time in our svelte-app.
 
 For convenience, we add the build script to our package.json.
@@ -132,7 +131,7 @@ For convenience, we add the build script to our package.json.
 
 // ...
 "scripts": {
-		"wasm": "wasm-pack build ./wasm-gfx --target web",
+		"wasm": "wasm-pack build ./wasm-lib --target web",
 		
 // ...
 }
@@ -144,3 +143,69 @@ npm run wasm
 ```
 
 ## 4.4. Import wasm-lib
+
+[SvelteKit Routing](https://kit.svelte.dev/docs/routing)
+>By default, pages are rendered both on the server (SSR) for the initial request and in the browser (CSR) for subsequent navigation.
+
+Our WebAssembly can only run in the browser and will cause errors if imported during SSR.
+
+See [SvelteKit Docs](https://kit.svelte.dev/faq#how-do-i-use-a-client-side-only-library-that-depends-on-document-or-window) for solutions.
+
+Here are two possible ways to do this.
+### Option A
+
+Import in onMount( ).
+
+```html
+<!-- src\routes\+page.svelte -->
+<script lang="ts">
+	import { onMount } from 'svelte';
+	let lib: typeof import('wasm-lib');
+
+	onMount(async () => {
+		lib = await import('wasm-lib');
+		await lib.default();
+		lib.greet();
+	});
+</script>
+
+<button on:click={() => lib.greet()}>Greet</button>
+```
+
+### Option B
+
+Disable SSR for the page.
+
+```typescript
+//src\routes\+page.server.ts
+export const ssr = false;
+```
+
+```html
+<!-- src\routes\+page.svelte -->
+<script lang="ts">
+	import { onMount } from 'svelte';
+	import * as lib from 'wasm-lib';
+
+	onMount(async () => {
+		await lib.default();
+		lib.greet();
+	});
+</script>
+
+<button on:click={() => lib.greet()}>Greet</button>
+```
+
+---
+
+We use 
+```typescript
+await lib.default();
+```
+in the onMount( ) function to instantiate the WebAssembly in either case.
+
+## 4.5. Run the application
+```console
+npm run dev
+```
+We should be greeted on load, and when clicking the button. 
