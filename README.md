@@ -1,5 +1,5 @@
 # SvelteKit + Rust/Wasm Project Setup Tutorial
-For this tutorial, we will create a rust/wasm project called "wasm-lib" and a SvelteKit web application called "svelte-app" that uses "wasm-lib".
+For this tutorial, we will create a rust/wasm project called ["wasm-lib"](https://github.com/Leangeful/wasm-lib) and a SvelteKit web application called ["svelte-app"](https://github.com/Leangeful/svelte-app) that uses "wasm-lib".
 
 The "wasm-lib" project will be added to "svelte-app" as a [git submodule](https://git-scm.com/book/en/v2/Git-Tools-Submodules), allowing us to keep it as a separate git repository that can be used in multiple projects, without publishing the package.
 
